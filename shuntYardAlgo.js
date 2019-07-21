@@ -17,6 +17,7 @@ class ShuntYardAlgoParser {
         let operatorlib = operator.createOperatorLib();
         // traverse the expression
         for (let i = 0; i < this.expr.length; i++) {
+            debugger;
             let currChar = this.expr[i];
 
             // build number/symbol
@@ -48,7 +49,7 @@ class ShuntYardAlgoParser {
                 this.currOperator = currChar;
 
                 // keep pop operator out of stack until a lower precedence stack top
-                this.popOperatorStack(operatorlib);
+                this.popOperatorStackUntilLowerPrecedence(operatorlib);
 
                 // push the current operator into stack
                 this.operatorStack[this.stackLevel].push(currChar);
@@ -58,7 +59,7 @@ class ShuntYardAlgoParser {
                 this.parBalance -= 1;
 
                 // keep pop operator out of stack until a lower precedence stack top
-                this.popOperatorStack(operatorlib);
+                this.popOperatorStackUntilEmpty(operatorlib);
 
                 if (0 < this.stackLevel) {
                     // pop out the combined paranthesis operand
@@ -87,7 +88,7 @@ class ShuntYardAlgoParser {
                 }
 
                 // keep pop operator out of stack until a lower precedence stack top
-                this.popOperatorStack(operatorlib);
+                this.popOperatorStackUntilEmpty(operatorlib);
 
             } else if ("(" === this.expr[i]) {
                 // parenthesis balanece sum plus 1
@@ -125,60 +126,70 @@ class ShuntYardAlgoParser {
         return this.operandStack[0][0];
     }
 
-    popOperatorStack(operatorlib) {
-        // parse the operator
+    popOperatorStackUntilLowerPrecedence(operatorlib) {
         while ((0 < this.operatorStack[this.stackLevel].length) &&
             (operatorlib.operators[this.currOperator].precedence
                 <= operatorlib.operators[this.operatorStack[this.stackLevel][this.operatorStack[this.stackLevel].length - 1]].precedence)) {
+            this.popOperatorStack(operatorlib);
+        }
+    }
 
-            // get the operator stack top
-            let operatorStkTop = this.operatorStack[this.stackLevel][this.operatorStack[this.stackLevel].length - 1];
+    popOperatorStackUntilEmpty(operatorlib) {
+        while (0 < this.operatorStack[this.stackLevel].length) {
+            this.popOperatorStack(operatorlib);
+        }
+    }
 
-            // build combined RPN tree node with operator and operands
-            if (operatorlib.operators[operatorStkTop].type === "binary") {
-                // pop the left and right operands for the binary operator
-                let rightOperand = this.operandStack[this.stackLevel].pop();
-                if (undefined === rightOperand) {
-                    throw "missing right operand for " + operatorStkTop;
-                }
-                let leftOperand = this.operandStack[this.stackLevel].pop();
-                if (undefined === leftOperand) {
-                    throw "missing left operand for " + operatorStkTop;
-                }
+    popOperatorStack(operatorlib) {
+        debugger;
 
-                // combine the left and right operands with the operator stack top element
-                let combOperand = RPNTreelib.createRPNTreeNode(this.operatorStack[this.stackLevel].pop(), "operator", leftOperand, rightOperand);
+        // get the operator stack top
+        let operatorStkTop = this.operatorStack[this.stackLevel][this.operatorStack[this.stackLevel].length - 1];
 
-                // push the combined operand into the current level of operand stack
-                this.operandStack[this.stackLevel].push(combOperand);
+        // build combined RPN tree node with operator and operands
+        if (operatorlib.operators[operatorStkTop].type === "binary") {
+            // pop the left and right operands for the binary operator
+            let rightOperand = this.operandStack[this.stackLevel].pop();
+            if (undefined === rightOperand) {
+                throw "missing right operand for " + operatorStkTop;
             }
-            // operator stack top is an uninary operator
-            else if (operatorlib.operators[operatorStkTop].type === "uninary") {
-                // pop the operands for the uninary operator
-                let operand = this.operandStack[this.stackLevel].pop();
-                if (undefined === operand) {
-                    throw "missing operand for " + operatorStkTop;
-                }
-
-                // combine operand and operator according association rule
-                let combinedOperand;
-                if (operatorlib.operators[operatorStkTop].associate === "left") {
-                    combinedOperand = RPNTreelib.createRPNTreeNode(this.operatorStack[this.stackLevel].pop(), "operator", operand, null);
-                }
-                else if (operatorlib.operators[operatorStkTop].associate === "right") {
-                    combinedOperand = RPNTreelib.createRPNTreeNode(this.operatorStack[this.stackLevel].pop(), "operator", null, operand);
-                }
-                else {
-                    throw "unsupported association type " + operatorlib.operators[operatorStkTop].associate;
-                }
-
-                // push the combined operand into the current level of operand stack
-                this.operandStack[this.stackLevel].push(combinedOperand);
+            let leftOperand = this.operandStack[this.stackLevel].pop();
+            if (undefined === leftOperand) {
+                throw "missing left operand for " + operatorStkTop;
             }
-            // throw exception if the operator is not supported
+
+            // combine the left and right operands with the operator stack top element
+            let combOperand = RPNTreelib.createRPNTreeNode(this.operatorStack[this.stackLevel].pop(), "operator", leftOperand, rightOperand);
+
+            // push the combined operand into the current level of operand stack
+            this.operandStack[this.stackLevel].push(combOperand);
+        }
+        // operator stack top is an uninary operator
+        else if (operatorlib.operators[operatorStkTop].type === "uninary") {
+            // pop the operands for the uninary operator
+            let operand = this.operandStack[this.stackLevel].pop();
+            if (undefined === operand) {
+                throw "missing operand for " + operatorStkTop;
+            }
+
+            // combine operand and operator according association rule
+            let combinedOperand;
+            if (operatorlib.operators[operatorStkTop].associate === "left") {
+                combinedOperand = RPNTreelib.createRPNTreeNode(this.operatorStack[this.stackLevel].pop(), "operator", operand, null);
+            }
+            else if (operatorlib.operators[operatorStkTop].associate === "right") {
+                combinedOperand = RPNTreelib.createRPNTreeNode(this.operatorStack[this.stackLevel].pop(), "operator", null, operand);
+            }
             else {
-                throw "unsupported operator type " + operatorlib.Operator[operatorStkTop].type + " for " + operatorStkTop;
+                throw "unsupported association type " + operatorlib.operators[operatorStkTop].associate;
             }
+
+            // push the combined operand into the current level of operand stack
+            this.operandStack[this.stackLevel].push(combinedOperand);
+        }
+        // throw exception if the operator is not supported
+        else {
+            throw "unsupported operator type " + operatorlib.Operator[operatorStkTop].type + " for " + operatorStkTop;
         }
     }
 }
@@ -205,11 +216,10 @@ rl.on('line', (line) => {
     } catch (e) {
         console.log(e);
     }
-    
+
     // next prompt
     rl.prompt();
 }).on('close', () => {
     console.log('Program Exits');
     process.exit(0);
 });
-
