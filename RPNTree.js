@@ -28,6 +28,8 @@ class RPNTreeNode {
             return "null"
         } else if (null === node.leftChild && null === node.rightChild) {
             return node.value;
+        } else if ("function" === node.type) {
+            return node.value + "(" + this.toStringSub(node.rightChild) + ")";
         } else {
             return node.value + "(" + this.toStringSub(node.leftChild) + "," + this.toStringSub(node.rightChild) + ")"
         }

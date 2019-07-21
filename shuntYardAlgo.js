@@ -10,6 +10,7 @@ class ShuntYardAlgoParser {
         this.expr = (expr + "$");               // expression
         this.currParse = null;                  // current parsing element
         this.currOperator = "";                 // current operator
+        this.parBalance = 0;                    // parenthesis balance
     }
     parse() {
         let operandlib = operand.createOperandLib();
@@ -53,6 +54,9 @@ class ShuntYardAlgoParser {
                 this.operatorStack[this.stackLevel].push(currChar);
 
             } else if (")" === currChar) {
+                // parenthesis balance sum minus 1
+                this.parBalance -= 1;
+
                 // keep pop operator out of stack until a lower precedence stack top
                 this.popOperatorStack(operatorlib);
 
@@ -75,7 +79,7 @@ class ShuntYardAlgoParser {
                     }
                 }
                 else {
-                    throw "imbalanced parenthesis";
+                    throw "imbalanced right parenthesis";
                 }
             } else if ("$" === currChar) {
                 if (i < this.expr.length - 1) {
@@ -86,6 +90,9 @@ class ShuntYardAlgoParser {
                 this.popOperatorStack(operatorlib);
 
             } else if ("(" === this.expr[i]) {
+                // parenthesis balanece sum plus 1
+                this.parBalance += 1;
+
                 // create a node with the operand and push it into current level of operand stack
                 let currOperand = operandlib.parseOperand();
 
@@ -109,6 +116,10 @@ class ShuntYardAlgoParser {
             } else {
                 throw "Unrecognized symbol/operator: " + this.expr[i];
             }
+        }
+
+        if (this.parBalance > 0) {
+            throw "unbalanced left parenthsis"
         }
 
         return this.operandStack[0][0];
