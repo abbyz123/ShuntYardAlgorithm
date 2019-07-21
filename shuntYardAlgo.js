@@ -2,6 +2,10 @@ operand = require("./operand.js");          // load operand processing library
 operator = require("./operator.js");        // load operator processing library
 RPNTreelib = require("./RPNTree.js");       // load RPN tree library
 
+module.exports = {
+    createShuntYardAlgoParser : (expr) => {return new ShuntYardAlgoParser(expr);}
+}
+
 class ShuntYardAlgoParser {
     constructor(expr) {
         this.stackLevel = 0;                    // operand stack level
@@ -193,33 +197,3 @@ class ShuntYardAlgoParser {
         }
     }
 }
-
-// Equation solver CLI
-const readline = require('readline');
-const rl = readline.createInterface({
-    input: process.stdin,
-    output: process.stdout,
-    prompt: 'parser>'
-});
-
-// Start the CLI for equation input
-rl.prompt();
-rl.on('line', (line) => {
-    // equation as a string
-    expr = line.trim();
-
-    // create a new equation parser
-    try {
-        exprParser = new ShuntYardAlgoParser(expr);
-        rpnResult = exprParser.parse();
-        console.log(rpnResult.toString());
-    } catch (e) {
-        console.log(e);
-    }
-
-    // next prompt
-    rl.prompt();
-}).on('close', () => {
-    console.log('Program Exits');
-    process.exit(0);
-});
