@@ -1,8 +1,8 @@
 let parser = require("./shuntYardAlgo.js");
 
 // equation as a string
-expr = "sqrt(a^2+b^2)";
-sym = {a : 3, b : 4};
+expr = "a ^ 2 + b ^ 2";
+sym = {a : 3, b : 4, c : 3.4, y : 4, x : 5};
 
 // create a new equation parser
 try {

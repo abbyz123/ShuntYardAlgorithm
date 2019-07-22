@@ -24,6 +24,10 @@ class ShuntYardAlgoParser {
             debugger;
             let currChar = this.expr[i];
 
+            if (' ' ===  currChar || '\t' === currChar) {
+                continue;
+            }
+
             // build number/symbol
             if (true === operandlib.buildOperand(currChar)) {
                 continue;
